@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "pilacoin")
 public class Pilacoin {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_pila")
     private Long id;
 

@@ -1,5 +1,7 @@
 package br.ufsm.csi.tapw.pilacoin.util;
 
+import br.ufsm.csi.tapw.pilacoin.model.Usuario;
+
 import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.PublicKey;
