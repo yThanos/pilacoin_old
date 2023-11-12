@@ -2,14 +2,17 @@ package br.ufsm.csi.tapw.pilacoin.controller;
 
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.Usuario;
+import br.ufsm.csi.tapw.pilacoin.model.Msgs;
+import br.ufsm.csi.tapw.pilacoin.model.json.TransferirPilaJson;
+import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.UsuarioRepository;
 import br.ufsm.csi.tapw.pilacoin.util.Constants;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,22 +20,47 @@ import java.util.List;
 @RequestMapping("/teste")
 @CrossOrigin
 public class TesteController {
-    @Autowired
-    private PilacoinRepository pilacoinRepository;
+    private final PilacoinRepository pilacoinRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final MsgsRepository msgsRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    public TesteController(PilacoinRepository pilacoinRepository, UsuarioRepository usuarioRepository, MsgsRepository msgsRepository, RabbitTemplate rabbitTemplate) {
+        this.pilacoinRepository = pilacoinRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.msgsRepository = msgsRepository;
+        this.rabbitTemplate = rabbitTemplate;
+    }
+
     @GetMapping("/pilas")
     public List<Pilacoin> getPilas(){
         return pilacoinRepository.findAll();
     }
 
-    @GetMapping("addUser")
+    @GetMapping("/addUser")
     public void addUser(){
-        usuarioRepository.save(Usuario.builder().nomeUsuario(Constants.USERNAME).chavePublciaUsuario(Constants.PUBLIC_KEY.toString().getBytes()).build());
+        usuarioRepository.save(Usuario.builder().nome(Constants.USERNAME).chavePublciaUsuario(Constants.PUBLIC_KEY.toString().getBytes()).build());
     }
-    @GetMapping("/hello")
-    public String hello(){
-        return "Hello world!";
+
+    @GetMapping("/userByName/{name}")
+    public Usuario getUserByName(@PathVariable String name){
+        return usuarioRepository.findByNome(name);
+    }
+
+    @GetMapping("/pilasByDono/{id}")
+    public List<Pilacoin> getPilasByDono(@PathVariable Long id){
+        return pilacoinRepository.findAllByIdDono(Usuario.builder().id(id).build());
+    }
+
+    @GetMapping("/msgs")
+    public List<Msgs> getMsgs(){
+        return msgsRepository.findAll();
+    }
+
+    @PostMapping("/tranferir")
+    public void transferirPila(TransferirPilaJson tp) throws JsonProcessingException {
+        ObjectMapper om = new ObjectMapper();
+        rabbitTemplate.convertAndSend("transferir-pila", om.writeValueAsString(tp));
     }
 }

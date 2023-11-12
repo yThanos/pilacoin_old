@@ -1,10 +1,9 @@
 package br.ufsm.csi.tapw.pilacoin.repository;
 
-import br.ufsm.csi.tapw.pilacoin.model.Usuario;
+import br.ufsm.csi.tapw.pilacoin.model.Msgs;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-    Usuario findByNome(String nome);
+public interface MsgsRepository extends JpaRepository<Msgs, Long> {
 }

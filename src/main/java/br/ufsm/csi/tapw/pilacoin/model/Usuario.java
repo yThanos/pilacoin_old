@@ -25,7 +25,7 @@ public class Usuario {
     private byte[] chavePublciaUsuario;
 
     @Column(name = "nome")
-    private String nomeUsuario;
+    private String nome;
 
     @JsonIgnore
     @OneToMany

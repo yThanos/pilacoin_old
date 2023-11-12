@@ -1,8 +1,10 @@
 package br.ufsm.csi.tapw.pilacoin.service;
 
+import br.ufsm.csi.tapw.pilacoin.model.Msgs;
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.Usuario;
 import br.ufsm.csi.tapw.pilacoin.model.json.*;
+import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.util.Constants;
 import br.ufsm.csi.tapw.pilacoin.util.PilaUtil;
@@ -26,12 +28,14 @@ public class RabbitManager {
     private final RabbitTemplate rabbitTemplate;
     private final PilacoinRepository pilacoinRepository;
     private static final ArrayList<String> listIgnroe = new ArrayList<>();
-    public static ArrayList<MsgsJson> mensagens = new ArrayList<>();
+    private final MsgsRepository msgsRepository;
 
     @Autowired
-    public RabbitManager(RabbitTemplate rabbitTemplate, PilacoinRepository pilacoinRepository) {
+    public RabbitManager(RabbitTemplate rabbitTemplate, PilacoinRepository pilacoinRepository, MsgsRepository msgsRepository) {
         this.rabbitTemplate = rabbitTemplate;
         this.pilacoinRepository = pilacoinRepository;
+        this.msgsRepository = msgsRepository;
+
     }
 
     @RabbitListener(queues = "descobre-bloco")
@@ -55,9 +59,9 @@ public class RabbitManager {
             }
         }
         System.out.println("Bloco minerado");
-        MsgsJson msg = MsgsJson.builder().msg("Bloco descoberto e minerado!").
+        Msgs msg = Msgs.builder().msg("Bloco descoberto e minerado!").
                 lida(false).nomeUsuario(Constants.USERNAME).queue("Decobre bloco").build();
-        RabbitManager.mensagens.add(msg);
+        msgsRepository.save(msg);
     }
 
     @RabbitListener(queues = "pila-minerado")
@@ -149,8 +153,8 @@ public class RabbitManager {
 
     @RabbitListener(queues = "vitor_fraporti")
     public void mensagens(@Payload String msg) throws JsonProcessingException {
-        MsgsJson message = new ObjectMapper().readValue(msg, MsgsJson.class);
-        mensagens.add(message);
+        Msgs message = new ObjectMapper().readValue(msg, Msgs.class);
+        msgsRepository.save(message);
         System.out.println("-=+=".repeat(10));
         System.out.println(msg);
         System.out.println("-=+=".repeat(10));

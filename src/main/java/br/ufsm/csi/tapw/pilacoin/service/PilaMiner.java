@@ -2,8 +2,9 @@ package br.ufsm.csi.tapw.pilacoin.service;
 
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.Usuario;
-import br.ufsm.csi.tapw.pilacoin.model.json.MsgsJson;
+import br.ufsm.csi.tapw.pilacoin.model.Msgs;
 import br.ufsm.csi.tapw.pilacoin.model.json.PilaCoinJson;
+import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.util.Constants;
 import br.ufsm.csi.tapw.pilacoin.util.PilaUtil;
@@ -25,8 +26,14 @@ import java.util.Date;
 
 @Service
 public class PilaMiner {
+    private final RabbitTemplate rabbitTemplate;
+    private final MsgsRepository msgsRepository;
+
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    public PilaMiner(RabbitTemplate rabbitTemplate, MsgsRepository msgsRepository) {
+        this.rabbitTemplate = rabbitTemplate;
+        this.msgsRepository = msgsRepository;
+    }
 
     @PostConstruct
     public void mina(){
@@ -60,24 +67,12 @@ public class PilaMiner {
                         System.out.println("DIFF: "+Constants.DIFFICULTY);
                         System.out.println("NONCE: "+pj.getNonce());
                         rabbitTemplate.convertAndSend("pila-minerado", om.writeValueAsString(pj));
-                        RabbitManager.mensagens.add(MsgsJson.builder().msg("Pila minerado!").nomeUsuario(Constants.USERNAME).lida(false).build());
+                        Msgs msg = Msgs.builder().msg("Pila minerado!").nomeUsuario(Constants.USERNAME).build();
+                        msgsRepository.save(msg);
                         tentativas = 0;
                     }
                 }
             }
         }).start();
-    }
-
-    private record SalvaPila(RabbitTemplate rabbitTemplate, PilaCoinJson pila, PilacoinRepository pilacoinRepository) implements Runnable {
-        @SneakyThrows
-        @Override
-        public void run() {
-            ObjectMapper ob = new ObjectMapper();
-            rabbitTemplate.convertAndSend("pila-minerado", ob.writeValueAsString(pila));
-            RabbitManager.mensagens.add(MsgsJson.builder().msg("Pila minerado!").nomeUsuario(Constants.USERNAME).lida(false).build());
-            //ToDo: salvar meu pila no banco
-            pilacoinRepository.save(Pilacoin.builder().nonce(pila.getNonce()).idDono(Usuario.builder().id(1L).build()).build());
-            //System.out.println("Pila minerado\n");
-        }
     }
 }
