@@ -45,7 +45,7 @@ public class TesteController {
 
     @GetMapping("/userByName/{name}")
     public Usuario getUserByName(@PathVariable String name){
-        return usuarioRepository.findByNome(name);
+        return usuarioRepository.findByNome(name).get();
     }
 
     @GetMapping("/pilasByDono/{id}")

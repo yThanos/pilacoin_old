@@ -6,6 +6,7 @@ import br.ufsm.csi.tapw.pilacoin.model.Usuario;
 import br.ufsm.csi.tapw.pilacoin.model.json.*;
 import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
+import br.ufsm.csi.tapw.pilacoin.repository.UsuarioRepository;
 import br.ufsm.csi.tapw.pilacoin.util.Constants;
 import br.ufsm.csi.tapw.pilacoin.util.PilaUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,21 +22,23 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 public class RabbitManager {
 
     private final RabbitTemplate rabbitTemplate;
     private final PilacoinRepository pilacoinRepository;
+    public final UsuarioRepository usuarioRepository;
     private static final ArrayList<String> listIgnroe = new ArrayList<>();
     private final MsgsRepository msgsRepository;
 
     @Autowired
-    public RabbitManager(RabbitTemplate rabbitTemplate, PilacoinRepository pilacoinRepository, MsgsRepository msgsRepository) {
+    public RabbitManager(RabbitTemplate rabbitTemplate, PilacoinRepository pilacoinRepository, MsgsRepository msgsRepository, UsuarioRepository usuarioRepository) {
         this.rabbitTemplate = rabbitTemplate;
         this.pilacoinRepository = pilacoinRepository;
         this.msgsRepository = msgsRepository;
-
+        this.usuarioRepository = usuarioRepository;
     }
 
     @RabbitListener(queues = "descobre-bloco")
@@ -170,6 +173,13 @@ public class RabbitManager {
         System.out.println("Msg pila validado: "+msg);
         ObjectMapper om = new ObjectMapper();
         ValidacaoPilaJson vpj = om.readValue(msg,ValidacaoPilaJson.class);
-        pilacoinRepository.save(Pilacoin.builder().nonce(vpj.getPilaCoinJson().getNonce()).idDono(Usuario.builder().id(1L).build()).build());
+        Optional<Usuario> user = usuarioRepository.findByNome(vpj.getPilaCoinJson().getNomeCriador());
+        if (user.isEmpty()){
+            usuarioRepository.save(Usuario.builder().nome(vpj.getPilaCoinJson().getNomeCriador()).
+                    chavePublciaUsuario(vpj.getPilaCoinJson().getChaveCriador()).build());
+            user = usuarioRepository.findByNome(vpj.getPilaCoinJson().getNomeCriador());
+        }
+        user.ifPresent(usuario -> pilacoinRepository.save(Pilacoin.builder().nonce(vpj.getPilaCoinJson().getNonce()).
+                idDono(usuario).build()));
     }
 }
