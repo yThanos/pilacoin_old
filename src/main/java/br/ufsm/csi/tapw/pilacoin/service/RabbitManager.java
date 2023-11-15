@@ -164,8 +164,17 @@ public class RabbitManager {
     }
 
     @RabbitListener(queues = "Vitor Fraporti-bloco-validado")
-    public void blocoMsg(@Payload String msg){
+    public void blocoMsg(@Payload String msg) throws JsonProcessingException {
         System.out.println("Msg bloco validado: "+msg);
+        ObjectMapper om = new ObjectMapper();
+        ValidacaoBlocoJson validacaoBlocoJson = om.readValue(msg, ValidacaoBlocoJson.class);
+        for(Transacoes transacao : validacaoBlocoJson.getBloco().getTransacoes()){
+            if(transacao.getNomeUsuarioOrigem().equals(Constants.USERNAME)){
+                //ToDo: remove do banco o meu pilacoin
+            } else if (transacao.getNomeUsuarioDestino().equals(Constants.USERNAME)){
+                //ToDo: insere no banco o meu pilaocin
+            }
+        }
     }
 
     @RabbitListener(queues = "Vitor Fraporti-pila-validado")
