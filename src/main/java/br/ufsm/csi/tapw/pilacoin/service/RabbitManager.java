@@ -113,6 +113,13 @@ public class RabbitManager {
         System.out.println("-=+=-=+=-=+=".repeat(4));
     }
 
+    /**
+     *
+     * @param blocoJson string bloco que alguem minerou
+     *
+     *
+     *
+     * */
     @RabbitListener(queues = "bloco-minerado")
     public void blocoMinerado(@Payload String blocoJson) throws NoSuchAlgorithmException {
         synchronized (listIgnroe){
@@ -174,8 +181,14 @@ public class RabbitManager {
     public void blocoMsg(@Payload String msg) throws JsonProcessingException {
         System.out.println("Msg bloco validado: "+msg);
         ObjectMapper om = new ObjectMapper();
-        ValidacaoBlocoJson vbj = om.readValue(msg, ValidacaoBlocoJson.class);
-        //ToDo: isnerir bloco bnaco
+        ValidacaoBlocoJson validacaoBlocoJson = om.readValue(msg, ValidacaoBlocoJson.class);
+        for(Transacoes transacao : validacaoBlocoJson.getBloco().getTransacoes()){
+            if(transacao.getNomeUsuarioOrigem().equals(Constants.USERNAME)){
+                //ToDo: remove do banco o meu pilacoin
+            } else if (transacao.getNomeUsuarioDestino().equals(Constants.USERNAME)){
+                //ToDo: insere no banco o meu pilaocin
+            }
+        }
     }
 
     @RabbitListener(queues = "Vitor Fraporti-pila-validado")

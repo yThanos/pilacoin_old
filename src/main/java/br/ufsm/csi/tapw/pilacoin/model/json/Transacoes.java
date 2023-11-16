@@ -18,6 +18,8 @@ import java.util.Date;
 public class Transacoes {
     private byte[] chaveUsuarioOrigem;
     private byte[] chaveUsuarioDestino;
+    private String nomeUsuarioOrigem;
+    private String nomeUsuarioDestino;
     private byte[] assinatura;
     private String noncePila;
     private Date dataTransacao;
