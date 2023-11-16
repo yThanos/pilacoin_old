@@ -13,7 +13,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +32,6 @@ public class RabbitManager {
     private static final ArrayList<String> listIgnroe = new ArrayList<>();
     private final MsgsRepository msgsRepository;
 
-    @Autowired
     public RabbitManager(RabbitTemplate rabbitTemplate, PilacoinRepository pilacoinRepository, MsgsRepository msgsRepository, UsuarioRepository usuarioRepository) {
         this.rabbitTemplate = rabbitTemplate;
         this.pilacoinRepository = pilacoinRepository;
@@ -69,12 +67,14 @@ public class RabbitManager {
 
     @RabbitListener(queues = "pila-minerado")
     public void pilaMinerado(@Payload String pilaStr) throws NoSuchAlgorithmException {
-        for(String pila: listIgnroe){
-            if (pila.equals(pilaStr)){
-                return;
+        synchronized (listIgnroe){
+            for(String pila: listIgnroe){
+                if (pila.equals(pilaStr)){
+                    return;
+                }
             }
+            listIgnroe.add(pilaStr);
         }
-        listIgnroe.add(pilaStr);
         System.out.println("-=+=-=+=-=+=".repeat(4));
         ObjectMapper ob = new ObjectMapper();
         PilaCoinJson pilaJson;
@@ -122,12 +122,14 @@ public class RabbitManager {
      * */
     @RabbitListener(queues = "bloco-minerado")
     public void blocoMinerado(@Payload String blocoJson) throws NoSuchAlgorithmException {
-        for(String bloco: listIgnroe){
-            if (bloco.equals(blocoJson)){
-                return;
+        synchronized (listIgnroe){
+            for(String bloco: listIgnroe){
+                if (bloco.equals(blocoJson)){
+                    return;
+                }
             }
+            listIgnroe.add(blocoJson);
         }
-        listIgnroe.add(blocoJson);
         System.out.println("XXXXXXXXXX".repeat(4));
         System.out.println("Validando bloco!");
         ObjectMapper om = new ObjectMapper();
@@ -164,6 +166,11 @@ public class RabbitManager {
     @RabbitListener(queues = "vitor_fraporti")
     public void mensagens(@Payload String msg) throws JsonProcessingException {
         Msgs message = new ObjectMapper().readValue(msg, Msgs.class);
+        if(message.getErro() != null){
+            StringBuilder sb = new StringBuilder();
+            //ToDo: message.getNonce(); pra pegar numeroBloco well, just maybe
+            sb.append(message.getErro()).append(" numeroBloco: XXXXXX");
+        }
         msgsRepository.save(message);
         System.out.println("-=+=".repeat(10));
         System.out.println(msg);
