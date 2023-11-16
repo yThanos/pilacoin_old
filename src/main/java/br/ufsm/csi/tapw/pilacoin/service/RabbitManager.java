@@ -113,6 +113,13 @@ public class RabbitManager {
         System.out.println("-=+=-=+=-=+=".repeat(4));
     }
 
+    /**
+     *
+     * @param blocoJson string bloco que alguem minerou
+     *
+     *
+     *
+     * */
     @RabbitListener(queues = "bloco-minerado")
     public void blocoMinerado(@Payload String blocoJson) throws NoSuchAlgorithmException {
         for(String bloco: listIgnroe){
