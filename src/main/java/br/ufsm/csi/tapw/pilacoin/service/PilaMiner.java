@@ -1,18 +1,14 @@
 package br.ufsm.csi.tapw.pilacoin.service;
 
-import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
-import br.ufsm.csi.tapw.pilacoin.model.Usuario;
 import br.ufsm.csi.tapw.pilacoin.model.Msgs;
 import br.ufsm.csi.tapw.pilacoin.model.json.PilaCoinJson;
 import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
-import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.util.Constants;
 import br.ufsm.csi.tapw.pilacoin.util.PilaUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
@@ -29,7 +25,6 @@ public class PilaMiner {
     private final RabbitTemplate rabbitTemplate;
     private final MsgsRepository msgsRepository;
 
-    @Autowired
     public PilaMiner(RabbitTemplate rabbitTemplate, MsgsRepository msgsRepository) {
         this.rabbitTemplate = rabbitTemplate;
         this.msgsRepository = msgsRepository;
