@@ -15,14 +15,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "pilacoin")
 public class Pilacoin {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_pila")
-    private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "id_usuario")
-    private Usuario idDono;
-
-    @Column(name = "nonce")
+    @Column(name = "nonce", unique = true)
     private String nonce;
+
+    @Column(name = "status")
+    private String status;
 }

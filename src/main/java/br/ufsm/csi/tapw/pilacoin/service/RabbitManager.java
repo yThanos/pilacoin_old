@@ -113,13 +113,6 @@ public class RabbitManager {
         System.out.println("-=+=-=+=-=+=".repeat(4));
     }
 
-    /**
-     *
-     * @param blocoJson string bloco que alguem minerou
-     *
-     *
-     *
-     * */
     @RabbitListener(queues = "bloco-minerado")
     public void blocoMinerado(@Payload String blocoJson) throws NoSuchAlgorithmException {
         synchronized (listIgnroe){
@@ -131,7 +124,6 @@ public class RabbitManager {
             listIgnroe.add(blocoJson);
         }
         System.out.println("XXXXXXXXXX".repeat(4));
-        System.out.println("Validando bloco!");
         ObjectMapper om = new ObjectMapper();
         BlocoJson bloco;
         try {
@@ -140,6 +132,7 @@ public class RabbitManager {
             System.out.println("Erro conversão");
             return;
         }
+        System.out.println("Validando bloco do: "+bloco.getNomeUsuarioMinerador());
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         BigInteger hash = new BigInteger(md.digest(blocoJson.getBytes(StandardCharsets.UTF_8))).abs();
         System.out.println(hash);
@@ -184,11 +177,14 @@ public class RabbitManager {
         ValidacaoBlocoJson validacaoBlocoJson = om.readValue(msg, ValidacaoBlocoJson.class);
         for(Transacoes transacao : validacaoBlocoJson.getBloco().getTransacoes()){
             if(transacao.getNomeUsuarioOrigem().equals(Constants.USERNAME)){
+                pilacoinRepository.delete(Pilacoin.builder().nonce(transacao.getNoncePila()).build());
                 //ToDo: remove do banco o meu pilacoin
             } else if (transacao.getNomeUsuarioDestino().equals(Constants.USERNAME)){
+                pilacoinRepository.save(Pilacoin.builder().nonce(transacao.getNoncePila()).status("PRONTO").build());
                 //ToDo: insere no banco o meu pilaocin
             }
         }
+        msgsRepository.save(Msgs.builder().msg("Bloco validado!").build());
     }
 
     @RabbitListener(queues = "Vitor Fraporti-pila-validado")
@@ -196,13 +192,9 @@ public class RabbitManager {
         System.out.println("Msg pila validado: "+msg);
         ObjectMapper om = new ObjectMapper();
         ValidacaoPilaJson vpj = om.readValue(msg,ValidacaoPilaJson.class);
-        Optional<Usuario> user = usuarioRepository.findByNome(vpj.getPilaCoinJson().getNomeCriador());
-        if (user.isEmpty()){
-            usuarioRepository.save(Usuario.builder().nome(vpj.getPilaCoinJson().getNomeCriador()).
-                    chavePublciaUsuario(vpj.getPilaCoinJson().getChaveCriador()).build());
-            user = usuarioRepository.findByNome(vpj.getPilaCoinJson().getNomeCriador());
+        PilaCoinJson pila = vpj.getPilaCoinJson();
+        if (pila.getNomeCriador().equals(Constants.USERNAME)){
+            pilacoinRepository.save(Pilacoin.builder().nonce(pila.getNonce()).status("VALIDO").build());
         }
-        user.ifPresent(usuario -> pilacoinRepository.save(Pilacoin.builder().nonce(vpj.getPilaCoinJson().getNonce()).
-                idDono(usuario).build()));
     }
 }

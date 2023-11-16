@@ -41,16 +41,6 @@ public class TesteController {
         usuarioRepository.save(Usuario.builder().nome(Constants.USERNAME).chavePublciaUsuario(Constants.PUBLIC_KEY.toString().getBytes()).build());
     }
 
-    @GetMapping("/userByName/{name}")
-    public Usuario getUserByName(@PathVariable String name){
-        return usuarioRepository.findByNome(name).get();
-    }
-
-    @GetMapping("/pilasByDono/{id}")
-    public List<Pilacoin> getPilasByDono(@PathVariable Long id){
-        return pilacoinRepository.findAllByIdDono(Usuario.builder().id(id).build());
-    }
-
     @GetMapping("/msgs")
     public List<Msgs> getMsgs(){
         return msgsRepository.findAll();

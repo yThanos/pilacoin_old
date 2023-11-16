@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-
 @Data
 @Builder
 @AllArgsConstructor
@@ -16,20 +14,10 @@ import java.util.Set;
 @Entity
 @Table(name = "usuario")
 public class Usuario {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_usuario")
-    private Long id;
-
     @Column(name = "chave_publica")
     private byte[] chavePublciaUsuario;
 
+    @Id
     @Column(name = "nome")
     private String nome;
-
-    @JsonIgnore
-    @OneToMany
-    @JoinColumn(name = "id_pila")
-    private Set<Pilacoin> pilas;
-
 }

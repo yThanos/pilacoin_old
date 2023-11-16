@@ -1,5 +1,6 @@
 package br.ufsm.csi.tapw.pilacoin.model.json;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -20,15 +21,9 @@ import java.util.List;
 @AllArgsConstructor
 @JsonPropertyOrder(alphabetic = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Entity
-@Table(name = "bloco")
 public class BlocoJson {
-    @Id
-    @Column(name = "numero_bloco")
     private int numeroBloco;
-    @Column(name = "nonce_anteior")
     private String nonceBlocoAnterior;
-    @Column(name = "nonce")
     private String nonce;
     private String nomeUsuarioMinerador;
     private byte[] chaveUsuarioMinerador;

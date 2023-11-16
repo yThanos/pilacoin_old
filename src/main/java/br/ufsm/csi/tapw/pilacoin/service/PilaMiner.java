@@ -1,8 +1,10 @@
 package br.ufsm.csi.tapw.pilacoin.service;
 
 import br.ufsm.csi.tapw.pilacoin.model.Msgs;
+import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.json.PilaCoinJson;
 import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
+import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.util.Constants;
 import br.ufsm.csi.tapw.pilacoin.util.PilaUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,11 +25,11 @@ import java.util.Date;
 @Service
 public class PilaMiner {
     private final RabbitTemplate rabbitTemplate;
-    private final MsgsRepository msgsRepository;
+    private final PilacoinRepository pilacoinRepository;
 
-    public PilaMiner(RabbitTemplate rabbitTemplate, MsgsRepository msgsRepository) {
+    public PilaMiner(RabbitTemplate rabbitTemplate, PilacoinRepository pilacoinRepository) {
         this.rabbitTemplate = rabbitTemplate;
-        this.msgsRepository = msgsRepository;
+        this.pilacoinRepository = pilacoinRepository;
     }
 
     @PostConstruct
@@ -62,8 +64,7 @@ public class PilaMiner {
                         System.out.println("DIFF: "+Constants.DIFFICULTY);
                         System.out.println("NONCE: "+pj.getNonce());
                         rabbitTemplate.convertAndSend("pila-minerado", om.writeValueAsString(pj));
-                        Msgs msg = Msgs.builder().msg("Pila minerado!").nomeUsuario(Constants.USERNAME).build();
-                        msgsRepository.save(msg);
+                        pilacoinRepository.save(Pilacoin.builder().nonce(pj.getNonce()).status("MINERADO").build());
                         tentativas = 0;
                     }
                 }

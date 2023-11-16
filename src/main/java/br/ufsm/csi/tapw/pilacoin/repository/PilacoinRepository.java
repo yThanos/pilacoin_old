@@ -8,6 +8,5 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PilacoinRepository extends JpaRepository<Pilacoin, Long> {
-    List<Pilacoin> findAllByIdDono(Usuario idDono);
+public interface PilacoinRepository extends JpaRepository<Pilacoin, String> {
 }
