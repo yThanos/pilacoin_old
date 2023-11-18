@@ -9,4 +9,5 @@ import java.util.List;
 
 @Repository
 public interface PilacoinRepository extends JpaRepository<Pilacoin, String> {
+    //public Pilacoin getFirstByNonceIsNotEmpty();
 }

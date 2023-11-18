@@ -41,9 +41,11 @@ public class RabbitManager {
 
     @RabbitListener(queues = "descobre-bloco")
     public void descobreBloco(@Payload String blocoJson) throws JsonProcessingException, NoSuchAlgorithmException {
+        System.out.println("=========".repeat(6));
         System.out.println("Descobriu um bloco!");
         ObjectMapper om = new ObjectMapper();
         BlocoJson bloco = om.readValue(blocoJson, BlocoJson.class);
+        System.out.println("Nonce bloco anterior: "+ bloco.getNonceBlocoAnterior());
         BigInteger hash;
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         bloco.setNomeUsuarioMinerador(Constants.USERNAME);
@@ -70,6 +72,7 @@ public class RabbitManager {
         synchronized (listIgnroe){
             for(String pila: listIgnroe){
                 if (pila.equals(pilaStr)){
+                    rabbitTemplate.convertAndSend("pila-minerado", pilaStr);
                     return;
                 }
             }
@@ -83,6 +86,11 @@ public class RabbitManager {
         } catch (JsonProcessingException e) {
             rabbitTemplate.convertAndSend("pila-minerado", pilaStr);
             return;
+        }
+        Optional<Usuario> user = usuarioRepository.findById(pilaJson.getNomeCriador());
+        if (user.isEmpty()){
+            usuarioRepository.save(Usuario.builder().nome(pilaJson.getNomeCriador())
+                    .chavePublciaUsuario(pilaJson.getChaveCriador()).build());
         }
         if(pilaJson.getNomeCriador().equals("Vitor Fraporti")){
             System.out.println("Ignora é meu!");
@@ -118,6 +126,7 @@ public class RabbitManager {
         synchronized (listIgnroe){
             for(String bloco: listIgnroe){
                 if (bloco.equals(blocoJson)){
+                    rabbitTemplate.convertAndSend("pila-minerado", blocoJson);
                     return;
                 }
             }
@@ -132,7 +141,7 @@ public class RabbitManager {
             System.out.println("Erro conversão");
             return;
         }
-        System.out.println("Validando bloco do: "+bloco.getNomeUsuarioMinerador());
+        System.out.println("Validando bloco do(a): "+bloco.getNomeUsuarioMinerador());
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         BigInteger hash = new BigInteger(md.digest(blocoJson.getBytes(StandardCharsets.UTF_8))).abs();
         System.out.println(hash);
@@ -159,42 +168,45 @@ public class RabbitManager {
     @RabbitListener(queues = "vitor_fraporti")
     public void mensagens(@Payload String msg) throws JsonProcessingException {
         Msgs message = new ObjectMapper().readValue(msg, Msgs.class);
-        if(message.getErro() != null){
-            StringBuilder sb = new StringBuilder();
-            //ToDo: message.getNonce(); pra pegar numeroBloco well, just maybe
-            sb.append(message.getErro()).append(" numeroBloco: XXXXXX");
-        }
         msgsRepository.save(message);
         System.out.println("-=+=".repeat(10));
+        if (message.getMsg() != null){
+            if(message.getMsg().contains("AG_BLOCO")){
+                pilacoinRepository.save(Pilacoin.builder().nonce(message.getNonce()).status("VALIDO").build());
+            }
+        }
         System.out.println(msg);
         System.out.println("-=+=".repeat(10));
     }
 
-    @RabbitListener(queues = "Vitor Fraporti-bloco-validado")
-    public void blocoMsg(@Payload String msg) throws JsonProcessingException {
-        System.out.println("Msg bloco validado: "+msg);
-        ObjectMapper om = new ObjectMapper();
-        ValidacaoBlocoJson validacaoBlocoJson = om.readValue(msg, ValidacaoBlocoJson.class);
-        for(Transacoes transacao : validacaoBlocoJson.getBloco().getTransacoes()){
-            if(transacao.getNomeUsuarioOrigem().equals(Constants.USERNAME)){
-                pilacoinRepository.delete(Pilacoin.builder().nonce(transacao.getNoncePila()).build());
-                //ToDo: remove do banco o meu pilacoin
-            } else if (transacao.getNomeUsuarioDestino().equals(Constants.USERNAME)){
-                pilacoinRepository.save(Pilacoin.builder().nonce(transacao.getNoncePila()).status("PRONTO").build());
-                //ToDo: insere no banco o meu pilaocin
-            }
-        }
-        msgsRepository.save(Msgs.builder().msg("Bloco validado!").build());
-    }
+//    @RabbitListener(queues = "Vitor Fraporti-bloco-validado")
+//    public void blocoMsg(@Payload String msg) throws JsonProcessingException {
+//        System.out.println("Msg bloco validado: "+msg);
+//        ObjectMapper om = new ObjectMapper();
+//        ValidacaoBlocoJson validacaoBlocoJson = om.readValue(msg, ValidacaoBlocoJson.class);
+//        for(Transacoes transacao : validacaoBlocoJson.getBloco().getTransacoes()){
+//            if(transacao.getNomeUsuarioOrigem().equals(Constants.USERNAME)){
+//                pilacoinRepository.delete(Pilacoin.builder().nonce(transacao.getNoncePila()).build());
+//            } else if (transacao.getNomeUsuarioDestino().equals(Constants.USERNAME)){
+//                pilacoinRepository.save(Pilacoin.builder().nonce(transacao.getNoncePila()).status("PRONTO").build());
+//            }
+//        }
+//        msgsRepository.save(Msgs.builder().msg("Bloco validado!").build());
+//    }
+//
+//    @RabbitListener(queues = "Vitor Fraporti-pila-validado")
+//    public void pilaMsg(@Payload String msg) throws JsonProcessingException {
+//        System.out.println("Msg pila validado: "+msg);
+//        ObjectMapper om = new ObjectMapper();
+//        ValidacaoPilaJson vpj = om.readValue(msg,ValidacaoPilaJson.class);
+//        PilaCoinJson pila = vpj.getPilaCoinJson();
+//        if (pila.getNomeCriador().equals(Constants.USERNAME)){
+//            pilacoinRepository.save(Pilacoin.builder().nonce(pila.getNonce()).status("VALIDO").build());
+//        }
+//    }
 
-    @RabbitListener(queues = "Vitor Fraporti-pila-validado")
-    public void pilaMsg(@Payload String msg) throws JsonProcessingException {
-        System.out.println("Msg pila validado: "+msg);
-        ObjectMapper om = new ObjectMapper();
-        ValidacaoPilaJson vpj = om.readValue(msg,ValidacaoPilaJson.class);
-        PilaCoinJson pila = vpj.getPilaCoinJson();
-        if (pila.getNomeCriador().equals(Constants.USERNAME)){
-            pilacoinRepository.save(Pilacoin.builder().nonce(pila.getNonce()).status("VALIDO").build());
-        }
+    @RabbitListener(queues = "Vitor Fraporti-query")
+    public void algo(@Payload String msg){
+        System.out.println("Resposta da query: "+msg);
     }
 }

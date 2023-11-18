@@ -22,6 +22,8 @@ import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.util.Date;
 
+import static br.ufsm.csi.tapw.pilacoin.controller.TesteController.threadMineradora;
+
 @Service
 public class PilaMiner {
     private final RabbitTemplate rabbitTemplate;
@@ -31,6 +33,8 @@ public class PilaMiner {
         this.rabbitTemplate = rabbitTemplate;
         this.pilacoinRepository = pilacoinRepository;
     }
+
+    public static Thread threadMiner;
 
     @PostConstruct
     public void mina(){
@@ -43,7 +47,10 @@ public class PilaMiner {
         }
         Constants.PUBLIC_KEY = kp.getPublic();
         Constants.PRIVATE_KEY = kp.getPrivate();
-        new Thread(new Runnable() {
+        threadMineradora = new Mineradora(rabbitTemplate, pilacoinRepository);
+        threadMineradora.setName("Mineradora");
+        threadMineradora.start();
+        threadMiner = new Thread(new Runnable() {
             @SneakyThrows
             @Override
             public void run() {
@@ -53,22 +60,18 @@ public class PilaMiner {
                 ObjectMapper om = new ObjectMapper();
                 MessageDigest md = MessageDigest.getInstance("SHA-256");
                 BigInteger hash;
-                int tentativas = 0;
                 while (true){
-                    tentativas++;
                     pj.setNonce(new PilaUtil().geraNonce());
                     hash = new BigInteger(md.digest(om.writeValueAsString(pj).getBytes(StandardCharsets.UTF_8))).abs();
                     if (hash.compareTo(Constants.DIFFICULTY) < 0){
-                        System.out.println("Minerado em: "+tentativas);
-                        System.out.println("HASH: "+hash);
-                        System.out.println("DIFF: "+Constants.DIFFICULTY);
-                        System.out.println("NONCE: "+pj.getNonce());
+                        System.out.println("\n\nMINERADO\n\n");
                         rabbitTemplate.convertAndSend("pila-minerado", om.writeValueAsString(pj));
                         pilacoinRepository.save(Pilacoin.builder().nonce(pj.getNonce()).status("MINERADO").build());
-                        tentativas = 0;
                     }
                 }
             }
-        }).start();
+        });
+        //threadMiner.start();
     }
 }
+

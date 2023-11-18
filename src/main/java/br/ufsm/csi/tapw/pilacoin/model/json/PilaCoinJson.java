@@ -1,5 +1,6 @@
 package br.ufsm.csi.tapw.pilacoin.model.json;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -16,10 +17,11 @@ import java.util.Date;
 @JsonPropertyOrder(alphabetic = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PilaCoinJson {
+    @JsonIgnore
     private Long id;
     private Date dataCriacao;
     private byte[] chaveCriador;
     private String nomeCriador;
     private String nonce;
-
+    private String status;
 }
