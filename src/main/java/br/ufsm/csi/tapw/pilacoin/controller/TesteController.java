@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/teste")
@@ -76,18 +77,21 @@ public class TesteController {
         return msgsRepository.findAll();
     }
 
-    @PostMapping("/tranferir")
-    public void transferirPila(Usuario user, int qtd) throws JsonProcessingException {
+    @PostMapping("/tranferir/{qtd}")
+    public void transferirPila(@RequestBody Usuario user, @PathVariable int qtd) throws JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
-        String nonce = "";
-        for (int i = 0;i<qtd;i++){
-            //Pilacoin pila = pilacoinRepository.getFirstByNonceIsNotEmpty();
-            TransferirPilaJson tpj = TransferirPilaJson.builder().chaveUsuarioDestino(user.getChavePublciaUsuario()).
-                    chaveUsuarioOrigem(Constants.PUBLIC_KEY.getEncoded()).noncePila(nonce).
-                    nomeUsuarioDestino(user.getNome()).nomeUsuarioOrigem(Constants.USERNAME).
-                    dataTransacao(new Date()).build();
-            tpj.setAssinatura(new PilaUtil().getAssinatura(tpj));
-            rabbitTemplate.convertAndSend("transferir-pila", om.writeValueAsString(tpj));
+        Optional<List<Pilacoin>> pilas = pilacoinRepository.findAllByStatusEquals("VALIDO");
+        if(pilas.isPresent()){
+            for (int i = 0;i<qtd;i++){
+                Pilacoin pila = pilas.get().get(i);
+                TransferirPilaJson tpj = TransferirPilaJson.builder().chaveUsuarioDestino(user.getChavePublciaUsuario()).
+                        chaveUsuarioOrigem(Constants.PUBLIC_KEY.getEncoded()).noncePila(pila.getNonce()).
+                        nomeUsuarioDestino(user.getNome()).nomeUsuarioOrigem(Constants.USERNAME).
+                        dataTransacao(new Date()).build();
+                tpj.setAssinatura(new PilaUtil().getAssinatura(tpj));
+                rabbitTemplate.convertAndSend("transferir-pila", om.writeValueAsString(tpj));
+                pilacoinRepository.save(Pilacoin.builder().nonce(pila.getNonce()).status("TRANSFERIDO").build());
+            }
         }
     }
 
