@@ -81,7 +81,7 @@ public class TesteController {
     public void transferirPila(@RequestBody Usuario user, @PathVariable int qtd) throws JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
         Optional<List<Pilacoin>> pilas = pilacoinRepository.findAllByStatusEquals("VALIDO");
-        if(pilas.isPresent()){
+        if(pilas.isPresent() && pilas.get().size() >= qtd){
             for (int i = 0;i<qtd;i++){
                 Pilacoin pila = pilas.get().get(i);
                 TransferirPilaJson tpj = TransferirPilaJson.builder().chaveUsuarioDestino(user.getChavePublciaUsuario()).
