@@ -90,7 +90,7 @@ public class TesteController {
                         dataTransacao(new Date()).build();
                 tpj.setAssinatura(new PilaUtil().getAssinatura(tpj));
                 rabbitTemplate.convertAndSend("transferir-pila", om.writeValueAsString(tpj));
-                pilacoinRepository.save(Pilacoin.builder().nonce(pila.getNonce()).status("TRANSFERIDO").build());
+                pilacoinRepository.delete(pila);
             }
         }
     }
