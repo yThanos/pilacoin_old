@@ -62,9 +62,6 @@ public class RabbitManager {
             }
         }
         System.out.println("Bloco minerado");
-        Msgs msg = Msgs.builder().msg("Bloco descoberto e minerado!").
-                lida(false).nomeUsuario(Constants.USERNAME).queue("Decobre bloco").build();
-        msgsRepository.save(msg);
     }
 
     @RabbitListener(queues = "pila-minerado")

@@ -85,7 +85,7 @@ public class TesteController {
             for (int i = 0;i<qtd;i++){
                 Pilacoin pila = pilas.get().get(i);
                 TransferirPilaJson tpj = TransferirPilaJson.builder().chaveUsuarioDestino(user.getChavePublciaUsuario()).
-                        chaveUsuarioOrigem(Constants.PUBLIC_KEY.getEncoded()).noncePila(pila.getNonce()).
+                        chaveUsuarioOrigem(Constants.PUBLIC_KEY.toString().getBytes()).noncePila(pila.getNonce()).
                         nomeUsuarioDestino(user.getNome()).nomeUsuarioOrigem(Constants.USERNAME).
                         dataTransacao(new Date()).build();
                 tpj.setAssinatura(new PilaUtil().getAssinatura(tpj));
