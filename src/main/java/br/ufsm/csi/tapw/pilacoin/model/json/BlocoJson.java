@@ -23,6 +23,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BlocoJson {
     private int numeroBloco;
+    private boolean minerado;
     private String nonceBlocoAnterior;
     private String nonce;
     private String nomeUsuarioMinerador;

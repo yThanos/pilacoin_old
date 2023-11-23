@@ -27,19 +27,24 @@ public class Mineradora extends Thread {
     @SneakyThrows
     public void run() {
         PilaCoinJson pj = PilaCoinJson.builder().dataCriacao(new Date()).
-                chaveCriador(Constants.PUBLIC_KEY.toString().getBytes()).
+                chaveCriador(Constants.PUBLIC_KEY.getEncoded()).
                 nomeCriador(Constants.USERNAME).build();
         ObjectMapper om = new ObjectMapper();
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         BigInteger hash;
+        int tentativa = 0;
         while (true){
+            tentativa++;
             if(!minerando){
-                while (!minerando){}
+                while (!minerando){
+                    //Thread.currentThread().wait();
+                }
             }
-            pj.setNonce(new PilaUtil().geraNonce());
+            pj.setNonce(PilaUtil.geraNonce());
             hash = new BigInteger(md.digest(om.writeValueAsString(pj).getBytes(StandardCharsets.UTF_8))).abs();
             if (hash.compareTo(Constants.DIFFICULTY) < 0){
-                System.out.println("\n\nMINERADO\n\n");
+                System.out.println("\n\nMINERADO em "+tentativa+" tentativas\n\n");
+                tentativa = 0;
                 rabbitTemplate.convertAndSend("pila-minerado", om.writeValueAsString(pj));
                 pilacoinRepository.save(Pilacoin.builder().nonce(pj.getNonce()).status("MINERADO").build());
             }

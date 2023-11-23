@@ -1,6 +1,6 @@
 package br.ufsm.csi.tapw.pilacoin.model.json;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import br.ufsm.csi.tapw.pilacoin.model.Usuario;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -8,23 +8,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 import java.util.List;
 
-@Builder
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonPropertyOrder(alphabetic = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PilaCoinJson {
-    @JsonIgnore
-    private Long id;
-    private Date dataCriacao;
-    private byte[] chaveCriador;
-    private String nomeCriador;
-    private String nonce;
-    private String status;
-    @JsonIgnore
-    private List<Transacoes> transacoes;
+public class QueryRecebe {
+    private int idQuery;
+    private String usuario;
+    private List<PilaCoinJson> pilasResult;
+    private List<BlocoJson> blocosResult;
+    private List<Usuario> usuariosResult;
 }

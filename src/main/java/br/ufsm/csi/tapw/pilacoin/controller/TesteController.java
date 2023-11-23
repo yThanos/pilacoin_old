@@ -3,12 +3,12 @@ package br.ufsm.csi.tapw.pilacoin.controller;
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.Usuario;
 import br.ufsm.csi.tapw.pilacoin.model.Msgs;
+import br.ufsm.csi.tapw.pilacoin.model.json.QueryEnvia;
 import br.ufsm.csi.tapw.pilacoin.model.json.TransferirPilaJson;
 import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.UsuarioRepository;
 import br.ufsm.csi.tapw.pilacoin.service.Mineradora;
-import br.ufsm.csi.tapw.pilacoin.service.PilaMiner;
 import br.ufsm.csi.tapw.pilacoin.util.Constants;
 import br.ufsm.csi.tapw.pilacoin.util.PilaUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -69,7 +69,7 @@ public class TesteController {
     @GetMapping("/addUser")
     public void addUser(){
         usuarioRepository.save(Usuario.builder().nome(Constants.USERNAME).
-                chavePublciaUsuario(Constants.PUBLIC_KEY.toString().getBytes()).build());
+                chavePublica(Constants.PUBLIC_KEY.getEncoded()).build());
     }
 
     @GetMapping("/msgs")
@@ -84,19 +84,21 @@ public class TesteController {
         if(pilas.isPresent() && pilas.get().size() >= qtd){
             for (int i = 0;i<qtd;i++){
                 Pilacoin pila = pilas.get().get(i);
-                TransferirPilaJson tpj = TransferirPilaJson.builder().chaveUsuarioDestino(user.getChavePublciaUsuario()).
-                        chaveUsuarioOrigem(Constants.PUBLIC_KEY.toString().getBytes()).noncePila(pila.getNonce()).
+                TransferirPilaJson tpj = TransferirPilaJson.builder().chaveUsuarioDestino(user.getChavePublica()).
+                        chaveUsuarioOrigem(Constants.PUBLIC_KEY.getEncoded()).noncePila(pila.getNonce()).
                         nomeUsuarioDestino(user.getNome()).nomeUsuarioOrigem(Constants.USERNAME).
                         dataTransacao(new Date()).build();
-                tpj.setAssinatura(new PilaUtil().getAssinatura(tpj));
+                tpj.setAssinatura(PilaUtil.geraAssinatura(tpj));
                 rabbitTemplate.convertAndSend("transferir-pila", om.writeValueAsString(tpj));
                 pilacoinRepository.delete(pila);
             }
         }
     }
 
-    @GetMapping("/query/{query}")
-    public void query(@PathVariable String query){
-        rabbitTemplate.convertAndSend("Vitor Fraporti-query", query);
+    @PostMapping("/query")
+    public void query(@RequestBody QueryEnvia query) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        System.out.println(query);
+        rabbitTemplate.convertAndSend("query", objectMapper.writeValueAsString(query));
     }
 }
