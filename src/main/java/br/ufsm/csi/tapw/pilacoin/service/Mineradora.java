@@ -36,9 +36,7 @@ public class Mineradora extends Thread {
         while (true){
             tentativa++;
             if(!minerando){
-                while (!minerando){
-                    //Thread.currentThread().wait();
-                }
+                while (!minerando){}
             }
             pj.setNonce(PilaUtil.geraNonce());
             hash = new BigInteger(md.digest(om.writeValueAsString(pj).getBytes(StandardCharsets.UTF_8))).abs();

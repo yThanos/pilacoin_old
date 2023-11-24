@@ -1,7 +1,6 @@
 package br.ufsm.csi.tapw.pilacoin.service;
 
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
-import br.ufsm.csi.tapw.pilacoin.model.Usuario;
 import br.ufsm.csi.tapw.pilacoin.model.json.*;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.UsuarioRepository;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
-import java.util.Optional;
 
 @Service
 public class RabbitManager {
@@ -29,20 +27,6 @@ public class RabbitManager {
         this.rabbitTemplate = rabbitTemplate;
         this.usuarioRepository = usuarioRepository;
         this.pilacoinRepository = pilacoinRepository;
-    }
-
-    @RabbitListener(queues = "fraporti-query")
-    public void algo(@Payload String msg) throws JsonProcessingException {
-        System.out.println("Resposta da query: "+msg);
-        ObjectMapper objectMapper = new ObjectMapper();
-        QueryRecebe qry = objectMapper.readValue(msg, QueryRecebe.class);
-        if(qry.getPilasResult() != null){
-            for (PilaCoinJson pila : qry.getPilasResult()){
-                pilacoinRepository.save(Pilacoin.builder().status("VALIDO").nonce(pila.getNonce()).build());
-            }
-        } else if (qry.getUsuariosResult() != null){
-            usuarioRepository.saveAll(qry.getUsuariosResult());
-        }
     }
 
     @RabbitListener(queues = "descobre-bloco")
@@ -76,12 +60,6 @@ public class RabbitManager {
         System.out.println("-=+=-=+=-=+=".repeat(4));
         ObjectMapper ob = new ObjectMapper();
         PilaCoinJson pilaJson = ob.readValue(pilaStr, PilaCoinJson.class);
-
-        Optional<Usuario> user = usuarioRepository.findById(pilaJson.getNomeCriador());
-        if (user.isEmpty()){
-            usuarioRepository.save(Usuario.builder().nome(pilaJson.getNomeCriador())
-                    .chavePublica(pilaJson.getChaveCriador()).build());
-        }
 
         if(pilaJson.getNomeCriador().equals(Constants.USERNAME)){
             System.out.println("Ignora é meu!");
@@ -137,6 +115,20 @@ public class RabbitManager {
             System.out.println("Não validou :(");
         }
         System.out.println("XXXXXXXXXX".repeat(4));
+    }
+
+    @RabbitListener(queues = "fraporti-query")
+    public void algo(@Payload String msg) throws JsonProcessingException {
+        System.out.println("Resposta da query: "+msg);
+        ObjectMapper objectMapper = new ObjectMapper();
+        QueryRecebe qry = objectMapper.readValue(msg, QueryRecebe.class);
+        if(qry.getPilasResult() != null){
+            for (PilaCoinJson pila : qry.getPilasResult()){
+                pilacoinRepository.save(Pilacoin.builder().status("VALIDaO").nonce(pila.getNonce()).build());
+            }
+        } else if (qry.getUsuariosResult() != null){
+            usuarioRepository.saveAll(qry.getUsuariosResult());
+        }
     }
 
     @RabbitListener(queues = "fraporti")
