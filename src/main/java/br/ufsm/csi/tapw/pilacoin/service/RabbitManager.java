@@ -124,7 +124,7 @@ public class RabbitManager {
         QueryRecebe qry = objectMapper.readValue(msg, QueryRecebe.class);
         if(qry.getPilasResult() != null){
             for (PilaCoinJson pila : qry.getPilasResult()){
-                pilacoinRepository.save(Pilacoin.builder().status("VALIDaO").nonce(pila.getNonce()).build());
+                pilacoinRepository.save(Pilacoin.builder().status(pila.getStatus()).nonce(pila.getNonce()).build());
             }
         } else if (qry.getUsuariosResult() != null){
             usuarioRepository.saveAll(qry.getUsuariosResult());
