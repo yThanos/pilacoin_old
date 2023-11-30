@@ -17,7 +17,7 @@ import java.util.Date;
 public class Mineradora extends Thread {
     private final RabbitTemplate rabbitTemplate;
     private final PilacoinRepository pilacoinRepository;
-    private volatile boolean minerando = true;
+    private volatile boolean minerando = false;
 
     public Mineradora(RabbitTemplate rabbitTemplate, PilacoinRepository pilacoinRepository) {
         this.rabbitTemplate = rabbitTemplate;
@@ -46,7 +46,7 @@ public class Mineradora extends Thread {
                 System.out.println("\n\nMINERADO em "+tentativa+" tentativas\n\n");
                 tentativa = 0;
                 rabbitTemplate.convertAndSend("pila-minerado", om.writeValueAsString(pj));
-                pilacoinRepository.save(Pilacoin.builder().nonce(pj.getNonce()).status("MINERADO").build());
+                pilacoinRepository.save(Pilacoin.builder().nonce(pj.getNonce()).status("AG_VALIDACAO").build());
             }
         }
     }

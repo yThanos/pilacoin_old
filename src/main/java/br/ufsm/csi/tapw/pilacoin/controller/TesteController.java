@@ -29,7 +29,7 @@ public class TesteController {
     private final MsgsRepository msgsRepository;
     private final RabbitTemplate rabbitTemplate;
     public static Mineradora threadMineradora;
-    public boolean minernado = true;
+    public boolean minernado = false;
 
     public TesteController(PilacoinRepository pilacoinRepository, UsuarioRepository usuarioRepository, MsgsRepository msgsRepository, RabbitTemplate rabbitTemplate) {
         this.pilacoinRepository = pilacoinRepository;
@@ -89,16 +89,17 @@ public class TesteController {
                         nomeUsuarioDestino(user.getNome()).nomeUsuarioOrigem(Constants.USERNAME).
                         dataTransacao(new Date()).build();
                 tpj.setAssinatura(PilaUtil.geraAssinatura(tpj));
+                System.out.println(om.writeValueAsString(tpj));
                 rabbitTemplate.convertAndSend("transferir-pila", om.writeValueAsString(tpj));
                 pilacoinRepository.delete(pila);
             }
         }
     }
 
-    @PostMapping("/query")
-    public void query(@RequestBody QueryEnvia query) throws JsonProcessingException {
+    @GetMapping("/query/{tipo}")
+    public void query(@PathVariable String tipo) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        System.out.println(query);
-        rabbitTemplate.convertAndSend("query", objectMapper.writeValueAsString(query));
+        rabbitTemplate.convertAndSend("query", objectMapper.writeValueAsString(QueryEnvia.builder().
+                tipoQuery(tipo).idQuery(1).nomeUsuario(Constants.USERNAME).build()));
     }
 }
