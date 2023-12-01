@@ -70,7 +70,6 @@ public class RabbitManager {
 
     @RabbitListener(queues = "descobre-bloco")
     public void descobreBloco(@Payload String blocoJson) throws JsonProcessingException, NoSuchAlgorithmException {
-<<<<<<< HEAD
         if(!minerandoBloco){
             System.out.println("Ignorando bloco, minerando desativado");
             rabbitTemplate.convertAndSend("descobre-bloco", blocoJson);
@@ -79,8 +78,6 @@ public class RabbitManager {
         System.out.println("=========".repeat(6));
         System.out.println("Descobriu um bloco!");
         System.out.println(blocoJson);
-=======
->>>>>>> 45b59ce0088e535307a1183491035d8b6c07c65b
         ObjectMapper om = new ObjectMapper();
         BlocoJson bloco = om.readValue(blocoJson, BlocoJson.class);
         bloco.setNomeUsuarioMinerador(Constants.USERNAME);
@@ -100,7 +97,6 @@ public class RabbitManager {
         }
     }
 
-<<<<<<< HEAD
     @RabbitListener(queues = "pila-minerado")
     public void pilaMinerado(@Payload String pilaStr) throws NoSuchAlgorithmException, JsonProcessingException {
         if(!validandoPila){
@@ -133,56 +129,6 @@ public class RabbitManager {
         }
         System.out.println("-=+=-=+=-=+=".repeat(4));
     }
-=======
-//    @RabbitListener(queues = "pila-minerado")
-//    public void pilaMinerado(@Payload String pilaStr) throws NoSuchAlgorithmException {
-//        System.out.println("-=+=-=+=-=+=".repeat(4));
-//        ObjectMapper ob = new ObjectMapper();
-//        PilaCoinJson pilaJson;
-//        try {
-//            pilaJson = ob.readValue(pilaStr, PilaCoinJson.class);
-//        } catch (JsonProcessingException e) {
-//            System.out.println("Pila formato invalido!");
-//            return;
-//        }
-//
-//        Optional<Usuario> user = usuarioRepository.findById(pilaJson.getNomeCriador());
-//        if (user.isEmpty()){
-//            usuarioRepository.save(Usuario.builder().nome(pilaJson.getNomeCriador())
-//                    .chavePublica(pilaJson.getChaveCriador()).build());
-//        }
-//
-//        if(pilaJson.getNomeCriador().equals(Constants.USERNAME)){
-//            System.out.println("Ignora é meu!");
-//            rabbitTemplate.convertAndSend("pila-minerado", pilaStr);
-//        } else {
-//            System.out.println("Validando pila do(a): "+pilaJson.getNomeCriador());
-//            BigInteger hash = null;
-//            try {
-//                hash = PilaUtil.geraHash(pilaStr);
-//            } catch (JsonProcessingException e) {
-//                return;
-//            }
-//            if(hash.compareTo(Constants.DIFFICULTY) < 0){
-//                ValidacaoPilaJson validacaoPilaJson = ValidacaoPilaJson.builder().
-//                        pilaCoinJson(pilaJson).
-//                        assinaturaPilaCoin(PilaUtil.geraAssinatura(pilaStr)).
-//                        nomeValidador(Constants.USERNAME).
-//                        chavePublicaValidador(Constants.PUBLIC_KEY.getEncoded()).build();
-//                try {
-//                    rabbitTemplate.convertAndSend("pila-validado", ob.writeValueAsString(validacaoPilaJson));
-//                } catch (JsonProcessingException e) {
-//                    throw new RuntimeException(e);
-//                }
-//                System.out.println("Valido!");
-//            } else {
-//                System.out.println("Não Validou! :(");
-//                rabbitTemplate.convertAndSend("pila-minerado", pilaStr);
-//            }
-//        }
-//        System.out.println("-=+=-=+=-=+=".repeat(4));
-//    }
->>>>>>> 45b59ce0088e535307a1183491035d8b6c07c65b
 
 
     @RabbitListener(queues = "report")
@@ -191,7 +137,6 @@ public class RabbitManager {
     }
 
     @RabbitListener(queues = "bloco-minerado")
-<<<<<<< HEAD
     public void blocoMinerado(@Payload String blocoJson) throws NoSuchAlgorithmException, JsonProcessingException {
         if(!validandoBloco){
             System.out.println("Ignorando bloco, validação desativada");
@@ -199,9 +144,6 @@ public class RabbitManager {
             return;
         }
         System.out.println("XXXXXXXXXX".repeat(4));
-=======
-    public void blocoMinerado(@Payload String blocoJson) throws NoSuchAlgorithmException {
->>>>>>> 45b59ce0088e535307a1183491035d8b6c07c65b
         ObjectMapper om = new ObjectMapper();
         BlocoJson bloco;
         try {
