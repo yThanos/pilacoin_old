@@ -18,13 +18,11 @@ import java.util.List;
 @JsonPropertyOrder(alphabetic = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PilaCoinJson {
-    @JsonIgnore
     private Long id;
     private Date dataCriacao;
     private byte[] chaveCriador;
     private String nomeCriador;
     private String nonce;
     private String status;
-    @JsonIgnore
     private List<Transacoes> transacoes;
 }
