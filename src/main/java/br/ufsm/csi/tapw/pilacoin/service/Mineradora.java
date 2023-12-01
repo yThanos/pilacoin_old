@@ -17,7 +17,7 @@ import java.util.Date;
 public class Mineradora extends Thread {
     private final RabbitTemplate rabbitTemplate;
     private final PilacoinRepository pilacoinRepository;
-    private volatile boolean minerando = false;
+    private volatile boolean minerando = true;
 
     public Mineradora(RabbitTemplate rabbitTemplate, PilacoinRepository pilacoinRepository) {
         this.rabbitTemplate = rabbitTemplate;

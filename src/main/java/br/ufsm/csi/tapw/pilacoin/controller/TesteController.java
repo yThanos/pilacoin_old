@@ -3,10 +3,8 @@ package br.ufsm.csi.tapw.pilacoin.controller;
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.Usuario;
 import br.ufsm.csi.tapw.pilacoin.model.MineState;
-import br.ufsm.csi.tapw.pilacoin.model.Msgs;
 import br.ufsm.csi.tapw.pilacoin.model.json.QueryEnvia;
 import br.ufsm.csi.tapw.pilacoin.model.json.TransferirPilaJson;
-import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.UsuarioRepository;
 import br.ufsm.csi.tapw.pilacoin.service.Mineradora;
@@ -28,26 +26,24 @@ import java.util.Optional;
 public class TesteController {
     private final PilacoinRepository pilacoinRepository;
     private final UsuarioRepository usuarioRepository;
-    private final MsgsRepository msgsRepository;
     private final RabbitTemplate rabbitTemplate;
     public static Mineradora threadMineradora;
-    public boolean minernado = false;
+    public boolean minernado = true;
 
-    public TesteController(PilacoinRepository pilacoinRepository, UsuarioRepository usuarioRepository, MsgsRepository msgsRepository, RabbitTemplate rabbitTemplate) {
+    public TesteController(PilacoinRepository pilacoinRepository, UsuarioRepository usuarioRepository, RabbitTemplate rabbitTemplate) {
         this.pilacoinRepository = pilacoinRepository;
         this.usuarioRepository = usuarioRepository;
-        this.msgsRepository = msgsRepository;
         this.rabbitTemplate = rabbitTemplate;
     }
 
     @GetMapping("/minerar")
     public boolean minerar(){
+        System.out.println("Alterando mineração");
         if(minernado){
             threadMineradora.parar();
         } else {
             threadMineradora.continuar();
         }
-        System.out.println(threadMineradora.getState());
         minernado = !minernado;
         return minernado;
     }
@@ -61,23 +57,12 @@ public class TesteController {
     @GetMapping("/mineState")
     public MineState isMinernado(){
         return MineState.builder().minerandoPila(minernado).minerandoBloco(RabbitManager.minerandoBloco)
-            .validandoBloco(RabbitManager.validandoPila).validandoBloco(RabbitManager.validandoBloco).build();
+            .validandoBloco(RabbitManager.validandoBloco).validandoPila(RabbitManager.validandoPila).build();
     }
 
     @GetMapping("/pilas")
     public List<Pilacoin> getPilas(){
         return pilacoinRepository.findAll();
-    }
-
-    @GetMapping("/addUser")
-    public void addUser(){
-        usuarioRepository.save(Usuario.builder().nome(Constants.USERNAME).
-                chavePublica(Constants.PUBLIC_KEY.getEncoded()).build());
-    }
-
-    @GetMapping("/msgs")
-    public List<Msgs> getMsgs(){
-        return msgsRepository.findAll();
     }
 
     @PostMapping("/tranferir/{qtd}")
@@ -108,19 +93,22 @@ public class TesteController {
 
     @GetMapping("/minerarBloco")
     public boolean minerarBloco(){
+        System.out.println("Alterando mineração de bloco");
         RabbitManager.minerandoBloco = !RabbitManager.minerandoBloco;
         return RabbitManager.minerandoBloco;
     }
 
     @GetMapping("/validarBloco")
     public boolean validarBloco(){
+        System.out.println("Alterando validação de bloco");
         RabbitManager.validandoBloco = !RabbitManager.validandoBloco;
         return RabbitManager.validandoBloco;
     }
 
     @GetMapping("/validarPila")
     public boolean validarPila(){
-        RabbitManager.validandoBloco = !RabbitManager.validandoBloco;
-        return RabbitManager.validandoBloco;
+        System.out.println("Alterando validação de pila");
+        RabbitManager.validandoPila = !RabbitManager.validandoPila;
+        return RabbitManager.validandoPila;
     }
 }
