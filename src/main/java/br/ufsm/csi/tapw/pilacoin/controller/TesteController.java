@@ -2,6 +2,7 @@ package br.ufsm.csi.tapw.pilacoin.controller;
 
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.Usuario;
+import br.ufsm.csi.tapw.pilacoin.model.MineState;
 import br.ufsm.csi.tapw.pilacoin.model.Msgs;
 import br.ufsm.csi.tapw.pilacoin.model.json.QueryEnvia;
 import br.ufsm.csi.tapw.pilacoin.model.json.TransferirPilaJson;
@@ -9,6 +10,7 @@ import br.ufsm.csi.tapw.pilacoin.repository.MsgsRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
 import br.ufsm.csi.tapw.pilacoin.repository.UsuarioRepository;
 import br.ufsm.csi.tapw.pilacoin.service.Mineradora;
+import br.ufsm.csi.tapw.pilacoin.service.RabbitManager;
 import br.ufsm.csi.tapw.pilacoin.util.Constants;
 import br.ufsm.csi.tapw.pilacoin.util.PilaUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,8 +59,9 @@ public class TesteController {
     }
 
     @GetMapping("/mineState")
-    public boolean isMinernado(){
-        return minernado;
+    public MineState isMinernado(){
+        return MineState.builder().minerandoPila(minernado).minerandoBloco(RabbitManager.minerandoBloco)
+            .validandoBloco(RabbitManager.validandoPila).validandoBloco(RabbitManager.validandoBloco).build();
     }
 
     @GetMapping("/pilas")
@@ -100,5 +103,23 @@ public class TesteController {
         ObjectMapper objectMapper = new ObjectMapper();
         System.out.println(query);
         rabbitTemplate.convertAndSend("query", objectMapper.writeValueAsString(query));
+    }
+
+    @GetMapping("/minerarBloco")
+    public boolean minerarBloco(){
+        RabbitManager.minerandoBloco = !RabbitManager.minerandoBloco;
+        return RabbitManager.minerandoBloco;
+    }
+
+    @GetMapping("/validarBloco")
+    public boolean validarBloco(){
+        RabbitManager.validandoBloco = !RabbitManager.validandoBloco;
+        return RabbitManager.validandoBloco;
+    }
+
+    @GetMapping("/validarPila")
+    public boolean validarPila(){
+        RabbitManager.validandoBloco = !RabbitManager.validandoBloco;
+        return RabbitManager.validandoBloco;
     }
 }

@@ -19,6 +19,10 @@ import java.security.NoSuchAlgorithmException;
 @Service
 public class RabbitManager {
 
+    public static boolean minerandoBloco = true;
+    public static boolean validandoPila = true;
+    public static boolean validandoBloco = true;
+
     private final RabbitTemplate rabbitTemplate;
     public final UsuarioRepository usuarioRepository;
     public final PilacoinRepository pilacoinRepository;
@@ -31,6 +35,11 @@ public class RabbitManager {
 
     @RabbitListener(queues = "descobre-bloco")
     public void descobreBloco(@Payload String blocoJson) throws JsonProcessingException, NoSuchAlgorithmException {
+        if(!minerandoBloco){
+            System.out.println("Ignorando bloco, minerando desativado");
+            rabbitTemplate.convertAndSend("descobre-bloco", blocoJson);
+            return;
+        }
         System.out.println("=========".repeat(6));
         System.out.println("Descobriu um bloco!");
         System.out.println(blocoJson);
@@ -57,6 +66,11 @@ public class RabbitManager {
 
     @RabbitListener(queues = "pila-minerado")
     public void pilaMinerado(@Payload String pilaStr) throws NoSuchAlgorithmException, JsonProcessingException {
+        if(!validandoPila){
+            System.out.println("Ignorando pila, validação desativada");
+            rabbitTemplate.convertAndSend("pila-minerado", pilaStr);
+            return;
+        }
         System.out.println("-=+=-=+=-=+=".repeat(4));
         ObjectMapper ob = new ObjectMapper();
         PilaCoinJson pilaJson = ob.readValue(pilaStr, PilaCoinJson.class);
@@ -91,6 +105,11 @@ public class RabbitManager {
 
     @RabbitListener(queues = "bloco-minerado")
     public void blocoMinerado(@Payload String blocoJson) throws NoSuchAlgorithmException, JsonProcessingException {
+        if(!validandoBloco){
+            System.out.println("Ignorando bloco, validação desativada");
+            rabbitTemplate.convertAndSend("bloco-minerado", blocoJson);
+            return;
+        }
         System.out.println("XXXXXXXXXX".repeat(4));
         ObjectMapper om = new ObjectMapper();
         BlocoJson bloco = om.readValue(blocoJson, BlocoJson.class);
