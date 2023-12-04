@@ -1,5 +1,8 @@
 package br.ufsm.csi.tapw.pilacoin.service;
 
+import br.ufsm.csi.tapw.pilacoin.model.Logs;
+import br.ufsm.csi.tapw.pilacoin.model.LogsDTO;
+import br.ufsm.csi.tapw.pilacoin.model.Msgs;
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.json.*;
 import br.ufsm.csi.tapw.pilacoin.repository.PilacoinRepository;
@@ -11,15 +14,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class RabbitManager {
-
+    public static List<Logs> logs = new ArrayList<>();
+    private final SimpMessagingTemplate template;
     public static boolean minerandoBloco = true;
     public static boolean validandoPila = true;
     public static boolean validandoBloco = true;
@@ -28,15 +35,16 @@ public class RabbitManager {
     public final UsuarioRepository usuarioRepository;
     public final PilacoinRepository pilacoinRepository;
 
-    public RabbitManager(RabbitTemplate rabbitTemplate, UsuarioRepository usuarioRepository, PilacoinRepository pilacoinRepository) {
+    public RabbitManager(RabbitTemplate rabbitTemplate, UsuarioRepository usuarioRepository, PilacoinRepository pilacoinRepository, SimpMessagingTemplate simpMessagingTemplate) {
         this.rabbitTemplate = rabbitTemplate;
         this.usuarioRepository = usuarioRepository;
         this.pilacoinRepository = pilacoinRepository;
+        this.template = simpMessagingTemplate;
     }
 
     @RabbitListener(queues = "fraporti-query")
     public void algo(@Payload String msg) throws JsonProcessingException {
-        //System.out.println("Resposta da query: "+msg);
+        System.out.println(msg);
         ObjectMapper objectMapper = new ObjectMapper();
         QueryRecebe qry = objectMapper.readValue(msg, QueryRecebe.class);
         if(qry.getPilasResult() != null){
@@ -184,7 +192,11 @@ public class RabbitManager {
     }
 
     @RabbitListener(queues = "fraporti")
-    public void mensagens(@Payload String msg){
+    public void mensagens(@Payload String msg) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Msgs msgs = objectMapper.readValue(msg, Msgs.class);
+        logs.add(Logs.builder().type(msgs.getErro()!=null?"ERRO":"MSG").message(msgs.getMsg()!=null?msgs.getMsg():msgs.getErro()).build());
+        template.convertAndSend("/topic/message", LogsDTO.builder().logs(logs).build());
         System.out.println("-=+=".repeat(10)+"\n"+msg+"\n"+"-=+=".repeat(10));
     }
 }

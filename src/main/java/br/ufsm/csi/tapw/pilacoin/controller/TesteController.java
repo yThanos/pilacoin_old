@@ -1,5 +1,6 @@
 package br.ufsm.csi.tapw.pilacoin.controller;
 
+import br.ufsm.csi.tapw.pilacoin.model.Logs;
 import br.ufsm.csi.tapw.pilacoin.model.Pilacoin;
 import br.ufsm.csi.tapw.pilacoin.model.Usuario;
 import br.ufsm.csi.tapw.pilacoin.model.MineState;
@@ -110,5 +111,10 @@ public class TesteController {
         System.out.println("Alterando validação de pila");
         RabbitManager.validandoPila = !RabbitManager.validandoPila;
         return RabbitManager.validandoPila;
+    }
+
+    @GetMapping("/logs")
+    public List<Logs> getLogs(){
+        return RabbitManager.logs;
     }
 }
